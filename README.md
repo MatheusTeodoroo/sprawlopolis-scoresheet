@@ -8,11 +8,20 @@ diz se a meta foi batida e guarda o histórico. Nada é sorteado pelo site.
 
 - Cooperativo/solo e competitivo (Interstate, 2 jogadores)
 - Dificuldade Normal / Fácil / Difícil
+- **Modo Campanha** (variante de fãs da Oficina de Variantes, 2024): mapa interativo com os 18 cenários, Praias,
+  trilhas de evolução, habilidades, ranking e a explicação completa das regras, sem precisar do documento original
 - Histórico, estatísticas e conquistas guardados no navegador (localStorage), com exportar/importar JSON
 - Português e inglês, tema claro e escuro
 - PWA: instalável e funciona offline
 
 Ferramenta de fãs, sem vínculo com a Button Shy Games. Não inclui a arte do jogo.
+
+## Créditos
+
+- **Sprawlopolis**: design de Steven Aramini, Danny Devine e Paul Kluka; arte de Danny Devine; expansões com
+  design de Jason Tagmire; publicado pela Button Shy Games.
+- **Modo Campanha**: Oficina de Variantes, 2024. Game design de Rafael Arruda e Raphael Gurian; revisão e
+  playtest de Renan Rondon; diagramação de Raphael Gurian.
 
 ## Desenvolvimento
 

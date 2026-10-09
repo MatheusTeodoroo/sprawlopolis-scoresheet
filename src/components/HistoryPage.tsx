@@ -6,13 +6,19 @@ import { interstateById } from '../data/interstate'
 import { plain, signed, useT } from '../i18n'
 import { ZONE_IDS, blockScore, expansionScores, roadTax } from '../lib/scoring'
 import { coopStats, vsStats } from '../lib/stats'
-import { exportGames, mergeGames, parseImport, today } from '../lib/storage'
-import type { CoopGame, ExpansionId, Game, VsGame } from '../types'
+import { exportData, mergeCampaigns, mergeGames, parseImport, today } from '../lib/storage'
+import type { Campaign, CoopGame, ExpansionId, Game, VsGame } from '../types'
 import { useConfirm } from './confirm'
 
-type Props = { games: Game[]; onChange: (games: Game[]) => void }
+type Props = {
+  games: Game[]
+  onChange: (games: Game[]) => void
+  /** campaigns travel in the same backup file */
+  campaigns: Campaign[]
+  onCampaigns: (campaigns: Campaign[]) => void
+}
 
-export function HistoryPage({ games, onChange }: Props) {
+export function HistoryPage({ games, onChange, campaigns, onCampaigns }: Props) {
   const { t, lang } = useT()
   const ask = useConfirm()
   const [message, setMessage] = useState<string | null>(null)
@@ -22,7 +28,7 @@ export function HistoryPage({ games, onChange }: Props) {
   const formatDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString(lang === 'pt' ? 'pt-BR' : 'en-US', { dateStyle: 'medium' })
 
   const download = () => {
-    const url = URL.createObjectURL(new Blob([exportGames(games)], { type: 'application/json' }))
+    const url = URL.createObjectURL(new Blob([exportData(games, campaigns)], { type: 'application/json' }))
     const a = Object.assign(document.createElement('a'), { href: url, download: `sprawlopolis-${today()}.json` })
     a.click()
     URL.revokeObjectURL(url)
@@ -30,10 +36,14 @@ export function HistoryPage({ games, onChange }: Props) {
 
   const importFile = async (file: File) => {
     try {
-      const { games: merged, added } = mergeGames(games, parseImport(await file.text()))
+      const incoming = parseImport(await file.text())
+      const mergedGames = mergeGames(games, incoming.games)
+      const mergedCampaigns = mergeCampaigns(campaigns, incoming.campaigns)
+      const added = mergedGames.added + mergedCampaigns.added
       if (added === 0) return setMessage(t('hist.nothingNew'))
       if (!(await ask(t('hist.confirmImport', { n: added })))) return
-      onChange(merged)
+      onChange(mergedGames.games)
+      onCampaigns(mergedCampaigns.campaigns)
       setMessage(t('hist.imported', { n: added }))
     } catch {
       setMessage(t('hist.importError'))
@@ -113,7 +123,7 @@ export function HistoryPage({ games, onChange }: Props) {
       <section className="rounded-2xl border border-line bg-surface p-4">
         <p className="mb-3 text-sm text-muted">{t('hist.backupHint')}</p>
         <div className="flex flex-wrap gap-2">
-          <button type="button" className="h-11 rounded-lg bg-surface-2 px-4 text-sm font-semibold disabled:opacity-40" disabled={games.length === 0} onClick={download}>
+          <button type="button" className="h-11 rounded-lg bg-surface-2 px-4 text-sm font-semibold disabled:opacity-40" disabled={games.length === 0 && campaigns.length === 0} onClick={download}>
             {t('hist.export')}
           </button>
           <button type="button" className="h-11 rounded-lg bg-surface-2 px-4 text-sm font-semibold" onClick={() => fileRef.current?.click()}>

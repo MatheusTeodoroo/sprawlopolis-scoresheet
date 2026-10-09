@@ -11,13 +11,17 @@ type Props = {
   onChange: (card: number | null) => void
   points?: number
   onPoints?: (n: number) => void
+  /** the card cannot be changed (campaign: mandatory card of the scenario) */
+  fixed?: boolean
+  /** numbers that may not be picked here (campaign: forbidden in the scenario) */
+  forbidden?: number[]
 }
 
 /** One scoring-card slot: type the printed number and the card's name and rule show up. */
-export function CardSlot({ index, value, taken, onChange, points, onPoints }: Props) {
+export function CardSlot({ index, value, taken, onChange, points, onPoints, fixed = false, forbidden = [] }: Props) {
   const { t, l } = useT()
   const [text, setText] = useState('')
-  const [error, setError] = useState<'invalid' | 'repeated' | null>(null)
+  const [error, setError] = useState<'invalid' | 'repeated' | 'forbidden' | null>(null)
   const card = cardById(value)
 
   const commit = (s: string, final: boolean) => {
@@ -25,6 +29,7 @@ export function CardSlot({ index, value, taken, onChange, points, onPoints }: Pr
     const n = parseInt(s, 10)
     if (Number.isNaN(n) || n < 1 || n > CARDS.length) return setError('invalid')
     if (!final && s === '1') return setError(null) // may still become 10–18
+    if (forbidden.includes(n)) return setError('forbidden')
     if (taken.includes(n)) return setError('repeated')
     setError(null)
     setText('')
@@ -48,9 +53,11 @@ export function CardSlot({ index, value, taken, onChange, points, onPoints }: Pr
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2">
               <h3 className="caps text-xl leading-tight">{card.name}</h3>
-              <button type="button" className="shrink-0 text-sm font-semibold text-accent underline" onClick={() => onChange(null)}>
-                {t('cards.change')}
-              </button>
+              {!fixed && (
+                <button type="button" className="shrink-0 text-sm font-semibold text-accent underline" onClick={() => onChange(null)}>
+                  {t('cards.change')}
+                </button>
+              )}
             </div>
             <p className="mt-1 text-sm leading-snug text-ink">{l(card.rule)}</p>
           </div>
@@ -95,7 +102,7 @@ export function CardSlot({ index, value, taken, onChange, points, onPoints }: Pr
           <button
             key={c.id}
             type="button"
-            disabled={taken.includes(c.id)}
+            disabled={taken.includes(c.id) || forbidden.includes(c.id)}
             title={c.name}
             onClick={() => commit(String(c.id), true)}
             className="caps h-10 rounded-lg bg-surface-2 text-lg text-ink active:bg-goal disabled:opacity-30"

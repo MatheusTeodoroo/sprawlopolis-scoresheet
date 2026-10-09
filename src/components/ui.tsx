@@ -21,11 +21,14 @@ export function Segmented<V extends string>({
   options,
   onChange,
   label,
+  dense = false,
 }: {
   value: V
   options: { value: V; label: string }[]
   onChange: (v: V) => void
   label: string
+  /** tighter padding, for four options on a phone */
+  dense?: boolean
 }) {
   return (
     <div role="radiogroup" aria-label={label} className="flex rounded-xl bg-surface-2 p-1">
@@ -36,7 +39,7 @@ export function Segmented<V extends string>({
           role="radio"
           aria-checked={o.value === value}
           onClick={() => onChange(o.value)}
-          className={`min-h-10 flex-1 rounded-lg px-3 text-sm font-semibold transition-colors ${
+          className={`min-h-10 flex-1 rounded-lg font-semibold transition-colors ${dense ? 'px-1 text-[13px]' : 'px-3 text-sm'} ${
             o.value === value ? 'bg-surface text-ink shadow-sm' : 'text-muted'
           }`}
         >

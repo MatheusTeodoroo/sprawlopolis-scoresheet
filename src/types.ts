@@ -84,3 +84,44 @@ export type Draft = {
 }
 
 export type Settings = { lang: Lang; theme: 'system' | 'light' | 'dark' }
+
+export type Stars = 1 | 2 | 3
+
+/** What the players type for one campaign scenario. */
+export type CampaignDraft = {
+  /** chosen difficulty; null = the scenario's own */
+  stars: Stars | null
+  drawn: [number | null, number | null]
+  /** points for the mandatory card, then the two drawn ones */
+  cardPoints: [number, number, number]
+  zones: Zones
+  roads: number
+  expansions: Expansions
+  /** sets of parks together (abilities P1/P2) */
+  parkSets: number
+  /** roads through the largest industrial area, up to 3 (abilities I1/I2) */
+  industrialRoads: number
+  notes: string
+}
+
+export type CampaignGame = Omit<CampaignDraft, 'stars' | 'drawn'> & {
+  date: string
+  node: number
+  stars: Stars
+  drawn: [number, number]
+  total: number
+  target: number
+  won: boolean
+  /** scenario chosen to follow a win */
+  next?: number
+}
+
+export type Campaign = {
+  id: string
+  cityName: string
+  players: string[]
+  createdAt: string
+  /** every game played, in order; the whole campaign state is derived from this log */
+  games: CampaignGame[]
+  draft: CampaignDraft
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AchievementsPage } from './components/AchievementsPage'
+import { CampaignPage } from './components/campaign/CampaignPage'
 import { CompetitiveSheet } from './components/CompetitiveSheet'
 import { CoopSheet } from './components/CoopSheet'
 import { HistoryPage } from './components/HistoryPage'
@@ -8,12 +9,13 @@ import { MetaSection } from './components/MetaSection'
 import { Segmented } from './components/ui'
 import { useLocalStorage, useTheme } from './hooks'
 import { I18nProvider, useT } from './i18n'
-import { KEYS, defaultSettings, emptyDraft, isGame } from './lib/storage'
-import type { Draft, Game, Settings } from './types'
+import { KEYS, defaultSettings, emptyDraft, isCampaign, isGame } from './lib/storage'
+import type { Campaign, Draft, Game, Settings } from './types'
 
-type Tab = 'game' | 'history' | 'achievements'
+type Tab = 'game' | 'campaign' | 'history' | 'achievements'
 
 const reviveGames = (stored: unknown): Game[] => (Array.isArray(stored) ? stored.filter(isGame) : [])
+const reviveCampaigns = (stored: unknown): Campaign[] => (Array.isArray(stored) ? stored.filter(isCampaign) : [])
 const reviveSettings = (stored: unknown): Settings => ({ ...defaultSettings(), ...(stored as Partial<Settings>) })
 // Fills in anything a draft saved by an older version of the app is missing.
 const reviveDraft = (stored: unknown): Draft => {
@@ -43,6 +45,7 @@ function Shell({ settings, setSettings }: { settings: Settings; setSettings: (s:
   const ask = useConfirm()
   const [tab, setTab] = useState<Tab>('game')
   const [games, setGames] = useLocalStorage<Game[]>(KEYS.games, () => [], reviveGames)
+  const [campaigns, setCampaigns] = useLocalStorage<Campaign[]>(KEYS.campaigns, () => [], reviveCampaigns)
   const [draft, setDraft] = useLocalStorage<Draft>(KEYS.draft, emptyDraft, reviveDraft)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -99,8 +102,10 @@ function Shell({ settings, setSettings }: { settings: Settings; setSettings: (s:
           label="Navigation"
           value={tab}
           onChange={setTab}
+          dense
           options={[
             { value: 'game', label: t('tab.game') },
+            { value: 'campaign', label: t('tab.campaign') },
             { value: 'history', label: games.length ? `${t('tab.history')} (${games.length})` : t('tab.history') },
             { value: 'achievements', label: t('tab.achievements') },
           ]}
@@ -151,7 +156,8 @@ function Shell({ settings, setSettings }: { settings: Settings; setSettings: (s:
             )}
           </>
         )}
-        {tab === 'history' && <HistoryPage games={games} onChange={setGames} />}
+        {tab === 'campaign' && <CampaignPage campaigns={campaigns} onChange={setCampaigns} />}
+        {tab === 'history' && <HistoryPage games={games} onChange={setGames} campaigns={campaigns} onCampaigns={setCampaigns} />}
         {tab === 'achievements' && <AchievementsPage games={games} />}
         <p className="pt-2 text-center text-xs text-muted">{t('disclaimer')}</p>
       </main>

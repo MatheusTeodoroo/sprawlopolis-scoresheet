@@ -1,8 +1,9 @@
-import type { Draft, Game, Settings, Side, Zones } from '../types'
+import type { Campaign, Draft, Game, Settings, Side, Zones } from '../types'
 
 export const KEYS = {
   games: 'sprawl.v1.games',
   draft: 'sprawl.v1.draft',
+  campaigns: 'sprawl.v1.campaigns',
   settings: 'sprawl.v1.settings',
 } as const
 
@@ -66,22 +67,42 @@ export function isGame(v: unknown): v is Game {
   return false
 }
 
-export function exportGames(games: Game[]): string {
-  return JSON.stringify({ app: 'sprawlopolis-scoresheet', version: 1, games }, null, 2)
+export function isCampaign(v: unknown): v is Campaign {
+  return (
+    isObj(v) && typeof v.id === 'string' && typeof v.cityName === 'string' && typeof v.createdAt === 'string' &&
+    Array.isArray(v.players) && isObj(v.draft) && Array.isArray(v.games) &&
+    v.games.every((g) => isObj(g) && isNum(g.node) && isNum(g.stars) && isNums(g.drawn, 2) && isNums(g.cardPoints, 3) &&
+      isZones(g.zones) && isNum(g.roads) && isObj(g.expansions) && typeof g.won === 'boolean')
+  )
 }
 
-/** Returns the valid games found in an export file, or throws if the file is not one. */
-export function parseImport(text: string): Game[] {
+export function exportData(games: Game[], campaigns: Campaign[]): string {
+  return JSON.stringify({ app: 'sprawlopolis-scoresheet', version: 1, games, campaigns }, null, 2)
+}
+
+/** Returns the valid games and campaigns found in an export file, or throws if the file is not one. */
+export function parseImport(text: string): { games: Game[]; campaigns: Campaign[] } {
   const data: unknown = JSON.parse(text)
-  const list = Array.isArray(data) ? data : isObj(data) && Array.isArray(data.games) ? data.games : null
-  if (!list) throw new Error('invalid file')
-  return list.filter(isGame)
+  const games = Array.isArray(data) ? data : isObj(data) && Array.isArray(data.games) ? data.games : null
+  if (!games) throw new Error('invalid file')
+  const campaigns = isObj(data) && Array.isArray(data.campaigns) ? data.campaigns : []
+  return { games: games.filter(isGame), campaigns: campaigns.filter(isCampaign) }
 }
 
-/** Adds incoming games that are not already present (by id), newest first. */
+/** Adds incoming items that are not already present (by id). */
+function mergeById<T extends { id: string }>(existing: T[], incoming: T[]): { items: T[]; added: number } {
+  const ids = new Set(existing.map((x) => x.id))
+  const fresh = incoming.filter((x) => !ids.has(x.id))
+  return { items: [...existing, ...fresh], added: fresh.length }
+}
+
+/** Merged games come back newest first. */
 export function mergeGames(existing: Game[], incoming: Game[]): { games: Game[]; added: number } {
-  const ids = new Set(existing.map((g) => g.id))
-  const fresh = incoming.filter((g) => !ids.has(g.id))
-  const games = [...existing, ...fresh].sort((a, b) => b.date.localeCompare(a.date))
-  return { games, added: fresh.length }
+  const { items, added } = mergeById(existing, incoming)
+  return { games: items.sort((a, b) => b.date.localeCompare(a.date)), added }
+}
+
+export function mergeCampaigns(existing: Campaign[], incoming: Campaign[]): { campaigns: Campaign[]; added: number } {
+  const { items, added } = mergeById(existing, incoming)
+  return { campaigns: items, added }
 }

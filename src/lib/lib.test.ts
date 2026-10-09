@@ -4,7 +4,8 @@ import { suggestAchievements, achievementCounts } from './achievements'
 import { competitiveResult, competitiveScores } from './competitive'
 import { blockScore, businessPenalty, coopResult, expansionScores, hardZone, roadTax, targetScore } from './scoring'
 import { coopStats, vsStats } from './stats'
-import { emptyDraft, emptySide, emptyZones, exportGames, mergeGames, parseImport } from './storage'
+import { newCampaign } from './campaign'
+import { emptyDraft, emptySide, emptyZones, exportData, mergeCampaigns, mergeGames, parseImport } from './storage'
 
 const zones = { residential: 3, commercial: 2, industrial: 4, park: 2 }
 const draft = (over: Partial<CoopDraft> = {}): CoopDraft => ({ ...emptyDraft().coop, ...over })
@@ -175,8 +176,11 @@ describe('stats', () => {
 describe('import / export', () => {
   it('round-trips and drops invalid entries', () => {
     const games: Game[] = [coopGame(), vsGame()]
-    expect(parseImport(exportGames(games))).toEqual(games)
-    expect(parseImport(JSON.stringify([coopGame(), { id: 'x' }, 42]))).toHaveLength(1)
+    const campaigns = [newCampaign('Teste', ['Ana'])]
+    expect(parseImport(exportData(games, campaigns))).toEqual({ games, campaigns })
+    expect(parseImport(JSON.stringify([coopGame(), { id: 'x' }, 42])).games).toHaveLength(1)
+    expect(parseImport(JSON.stringify({ games: [], campaigns: [{ id: 'x' }] })).campaigns).toEqual([])
+    expect(mergeCampaigns(campaigns, [...campaigns, newCampaign('Outra', [])]).added).toBe(1)
     expect(() => parseImport('{"foo":1}')).toThrow()
     expect(() => parseImport('not json')).toThrow()
   })

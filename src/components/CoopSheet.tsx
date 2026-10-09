@@ -1,21 +1,15 @@
 import { useState } from 'react'
 import { plain, useT } from '../i18n'
 import { suggestAchievements } from '../lib/achievements'
-import { ZONE_IDS, coopResult, hardZone, scenicRoute } from '../lib/scoring'
-import type { CoopDraft, CoopGame, Draft, ZoneId } from '../types'
+import { coopResult, hardZone, scenicRoute } from '../lib/scoring'
+import type { CoopDraft, CoopGame, Draft } from '../types'
 import { AchievementPicker } from './AchievementPicker'
 import { CardSlot } from './CardSlot'
 import { ExpansionsSection } from './ExpansionsSection'
 import { NotesField } from './MetaSection'
 import { TotalBar } from './TotalBar'
 import { NumberStepper, Points, Section, Segmented } from './ui'
-
-export const ZONE_BG: Record<ZoneId, string> = {
-  residential: 'bg-res',
-  commercial: 'bg-com',
-  industrial: 'bg-ind',
-  park: 'bg-park',
-}
+import { ZoneGrid } from './ZoneGrid'
 
 type Props = {
   draft: Draft
@@ -85,19 +79,7 @@ export function CoopSheet({ draft, onChange, onNotes, onSave }: Props) {
       </Section>
 
       <Section title={t('zones.title')} aside={<Points value={r.blocks} className="text-2xl" />}>
-        <div className="grid grid-cols-2 gap-2">
-          {ZONE_IDS.map((z) => (
-            <div
-              key={z}
-              className={`rounded-xl p-2 transition-opacity ${ZONE_BG[z]} ${scoredZone && scoredZone !== z ? 'opacity-45' : ''}`}
-            >
-              <div className="caps mb-1 text-center text-base text-zone-ink">{t(`zone.${z}`)}</div>
-              <div className="flex justify-center">
-                <NumberStepper compact min={0} value={d.zones[z]} label={t(`zone.${z}`)} onChange={(n) => onChange({ zones: { ...d.zones, [z]: n } })} />
-              </div>
-            </div>
-          ))}
-        </div>
+        <ZoneGrid zones={d.zones} onChange={(zones) => onChange({ zones })} only={scoredZone} />
         <div className="mt-3">
           <Segmented
             label={t('diff.title')}

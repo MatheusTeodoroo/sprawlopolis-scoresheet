@@ -1,38 +1,37 @@
 import { BEACH_CARDS, CONSTRUCTION_CARDS, EXPANSIONS, type Variant } from '../data/expansions'
 import { useT } from '../i18n'
 import { ROADWORK_PENALTIES } from '../lib/scoring'
-import type { ExpansionId, Expansions, VariantState } from '../types'
+import { defaultExpansion } from '../lib/campaign'
+import type { BeachCard, ExpansionId, Expansions, VariantState } from '../types'
 import { NumberStepper, Pill, Points, Section } from './ui'
-
-const DEFAULTS: { [K in ExpansionId]-?: () => NonNullable<Expansions[K]> } = {
-  wrecktar: () => ({ commercial: 0 }),
-  poi: () => ({ matches: 0 }),
-  beaches: () => ({ card: null, count: 0, yes: false }),
-  construction: () => ({ card: null, count: 0, yes: false }),
-  roadwork: () => ({ unplaced: [] }),
-  interstate: () => true,
-}
 
 type Props = {
   value: Expansions
   scores: Partial<Record<ExpansionId, number>>
   onChange: (next: Expansions) => void
+  /** expansions the players may turn on and off; defaults to all of them */
+  optional?: ExpansionId[]
+  /** expansions that are always on (campaign scenarios) */
+  forced?: ExpansionId[]
+  /** Beach cards still available (campaign: each can be used once) */
+  beachChoices?: BeachCard[]
+  hint?: string
 }
 
-export function ExpansionsSection({ value, scores, onChange }: Props) {
+export function ExpansionsSection({ value, scores, onChange, optional, forced = [], beachChoices, hint }: Props) {
   const { t, l } = useT()
 
   const toggle = (id: ExpansionId) => {
     const next = { ...value }
     if (id in next) delete next[id]
-    else Object.assign(next, { [id]: DEFAULTS[id]() })
+    else Object.assign(next, { [id]: defaultExpansion(id) })
     onChange(next)
   }
 
   return (
-    <Section title={t('exp.title')} hint={t('exp.hint')}>
-      <div className="flex flex-wrap gap-2">
-        {EXPANSIONS.map((e) => (
+    <Section title={t('exp.title')} hint={hint ?? t('exp.hint')}>
+      <div className="flex flex-wrap gap-2 empty:hidden">
+        {EXPANSIONS.filter((e) => (optional ? optional.includes(e.id) : !forced.includes(e.id))).map((e) => (
           <Pill key={e.id} on={e.id in value} onClick={() => toggle(e.id)}>
             {e.name}
           </Pill>
@@ -54,7 +53,7 @@ export function ExpansionsSection({ value, scores, onChange }: Props) {
             <CountRow label={l(e.prompt!)} value={value.poi.matches} onChange={(matches) => onChange({ ...value, poi: { matches } })} />
           )}
           {e.id === 'beaches' && value.beaches && (
-            <VariantPicker cards={BEACH_CARDS} state={value.beaches} onChange={(beaches) => onChange({ ...value, beaches })} />
+            <VariantPicker cards={BEACH_CARDS.filter((c) => !beachChoices || beachChoices.includes(c.id))} state={value.beaches} onChange={(beaches) => onChange({ ...value, beaches })} />
           )}
           {e.id === 'construction' && value.construction && (
             <VariantPicker cards={CONSTRUCTION_CARDS} state={value.construction} onChange={(construction) => onChange({ ...value, construction })} />
