@@ -1,0 +1,91 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root {
+  color-scheme: light;
+  --bg: #f3eee6;
+  --surface: #fffdf9;
+  --surface-2: #e9e2d7;
+  --ink: #3a332a;
+  --muted: #74695a;
+  --line: #d3c9ba;
+  --accent: #4f7399;
+  --accent-ink: #ffffff;
+  --goal: #f7ee6d;
+  --goal-ink: #3a332a;
+  --res: #f4b58a;
+  --com: #a5dbf9;
+  --ind: #c4c4c4;
+  --park: #b5d49b;
+  --zone-ink: #2c261e;
+  --neg: #b83227;
+  --pos: #2b7648;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #1c1a17;
+  --surface: #272420;
+  --surface-2: #35312a;
+  --ink: #efe9df;
+  --muted: #aca292;
+  --line: #4b453b;
+  --accent: #8fb4dc;
+  --accent-ink: #14202c;
+  --goal: #e9df55;
+  --goal-ink: #2c261e;
+  --res: #d08b5b;
+  --com: #6bb1d8;
+  --ind: #9a9a9a;
+  --park: #86b563;
+  --zone-ink: #17130e;
+  --neg: #ff8f80;
+  --pos: #82d6a3;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-goal: var(--goal);
+  --color-goal-ink: var(--goal-ink);
+  --color-res: var(--res);
+  --color-com: var(--com);
+  --color-ind: var(--ind);
+  --color-park: var(--park);
+  --color-zone-ink: var(--zone-ink);
+  --color-neg: var(--neg);
+  --color-pos: var(--pos);
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+/* Condensed caps, echoing the lettering of the paper scoresheet */
+.caps {
+  font-family: 'Bahnschrift Condensed', 'Arial Narrow', 'Roboto Condensed', system-ui, sans-serif;
+  font-stretch: condensed;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
