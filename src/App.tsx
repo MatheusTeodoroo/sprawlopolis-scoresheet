@@ -3,6 +3,7 @@ import { AchievementsPage } from './components/AchievementsPage'
 import { CompetitiveSheet } from './components/CompetitiveSheet'
 import { CoopSheet } from './components/CoopSheet'
 import { HistoryPage } from './components/HistoryPage'
+import { ConfirmProvider, useConfirm } from './components/confirm'
 import { MetaSection } from './components/MetaSection'
 import { Segmented } from './components/ui'
 import { useLocalStorage, useTheme } from './hooks'
@@ -30,13 +31,16 @@ export default function App() {
 
   return (
     <I18nProvider lang={settings.lang}>
-      <Shell settings={settings} setSettings={setSettings} />
+      <ConfirmProvider>
+        <Shell settings={settings} setSettings={setSettings} />
+      </ConfirmProvider>
     </I18nProvider>
   )
 }
 
 function Shell({ settings, setSettings }: { settings: Settings; setSettings: (s: Settings) => void }) {
   const { t } = useT()
+  const ask = useConfirm()
   const [tab, setTab] = useState<Tab>('game')
   const [games, setGames] = useLocalStorage<Game[]>(KEYS.games, () => [], reviveGames)
   const [draft, setDraft] = useLocalStorage<Draft>(KEYS.draft, emptyDraft, reviveDraft)
@@ -121,7 +125,7 @@ function Shell({ settings, setSettings }: { settings: Settings; setSettings: (s:
               <button
                 type="button"
                 className="h-12 shrink-0 rounded-xl border border-line px-3 text-sm font-semibold text-muted"
-                onClick={() => confirm(t('confirm.new')) && setDraft(emptyDraft({ mode: draft.mode, players: draft.players }))}
+                onClick={async () => (await ask(t('confirm.new'))) && setDraft(emptyDraft({ mode: draft.mode, players: draft.players }))}
               >
                 {t('new')}
               </button>

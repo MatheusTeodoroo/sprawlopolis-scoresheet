@@ -8,11 +8,13 @@ import { ZONE_IDS, blockScore, expansionScores, roadTax } from '../lib/scoring'
 import { coopStats, vsStats } from '../lib/stats'
 import { exportGames, mergeGames, parseImport, today } from '../lib/storage'
 import type { CoopGame, ExpansionId, Game, VsGame } from '../types'
+import { useConfirm } from './confirm'
 
 type Props = { games: Game[]; onChange: (games: Game[]) => void }
 
 export function HistoryPage({ games, onChange }: Props) {
   const { t, lang } = useT()
+  const ask = useConfirm()
   const [message, setMessage] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const coop = coopStats(games)
@@ -30,7 +32,7 @@ export function HistoryPage({ games, onChange }: Props) {
     try {
       const { games: merged, added } = mergeGames(games, parseImport(await file.text()))
       if (added === 0) return setMessage(t('hist.nothingNew'))
-      if (!confirm(t('hist.confirmImport', { n: added }))) return
+      if (!(await ask(t('hist.confirmImport', { n: added })))) return
       onChange(merged)
       setMessage(t('hist.imported', { n: added }))
     } catch {
@@ -97,7 +99,7 @@ export function HistoryPage({ games, onChange }: Props) {
                   <button
                     type="button"
                     className="mt-3 h-10 rounded-lg border border-neg px-4 text-sm font-semibold text-neg"
-                    onClick={() => confirm(t('hist.confirmDelete')) && onChange(games.filter((x) => x.id !== g.id))}
+                    onClick={async () => (await ask(t('hist.confirmDelete'))) && onChange(games.filter((x) => x.id !== g.id))}
                   >
                     {t('hist.delete')}
                   </button>
